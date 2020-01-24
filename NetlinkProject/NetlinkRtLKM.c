@@ -13,7 +13,8 @@
 #include <net/sock.h>       /*Network namespace and socket Based APIs*/
 #include <linux/string.h>   /*for memset/memcpy etc..., do not use <string.h>, that is for user space*/
 #include <linux/kernel.h>   /*for scnprintf*/
-#include "netLinkKernelUtils.h"
+#define __KERNEL__
+#include "common.h"
 
 /*Global variables of this LKM*/
 static struct sock *nl_sk = NULL;       /*Kernel space Netlink socket ptr*/
