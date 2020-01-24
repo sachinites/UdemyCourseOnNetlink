@@ -58,6 +58,7 @@ greet_kernel(int sock_fd, char *msg, uint32_t msg_len){
 static void
 exit_userspace(int sock_fd){
     close(sock_fd);
+    exit(0);
 }
 
 uint32_t new_seq_no(){

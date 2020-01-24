@@ -3,7 +3,7 @@
 */
 #include <linux/module.h> 	     /* Needed by all modules */
 
-/*This function shall be invoked as soon as this LKM is loaded.
+/* This function shall be invoked as soon as this LKM is loaded.
  * Note the function prototype */
 int hello_world_init_module(void){
 
@@ -15,7 +15,7 @@ int hello_world_init_module(void){
 }
 
 
-/* Visit my Weboste : https://csepracticals.wixsite.com/csepracticals
+/* Visit my Webiste : https://csepracticals.wixsite.com/csepracticals
  * for other courses for free or on discounted price. Take a look !! */
 
 
@@ -32,8 +32,6 @@ void hello_world_cleanup_module(void){
  * try to use 'init_module' and 'cleanup_module' instead */
 module_init(hello_world_init_module);
 module_exit(hello_world_cleanup_module);
-
-
 
 /*Module Information*/
 #define AUTHOR_NAME "ABHISHEK_SAGAR"

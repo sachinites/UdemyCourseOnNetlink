@@ -1,5 +1,5 @@
 obj-m += NetlinkRtLKM.o
 all:
-	make -C /lib/modules/`uname -r`/build M=$(PWD) modules
+	make -C /lib/modules/5.0.0/build ARCH=um M=$(PWD) modules
 clean:
-	make -C /lib/modules/`uname -r`/build M=$(PWD) clean
+	make -C /lib/modules/5.0.0/build ARCH=um M=$(PWD) clean
