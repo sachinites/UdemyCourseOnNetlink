@@ -39,18 +39,19 @@
 #include <memory.h>
 #include <stdint.h>  /*for using uint32_t*/
 #include <pthread.h>
-#include "common.h"
+#include "netLinkKernelUtils.h"
 
 int
 send_netlink_msg_to_kernel(int sock_fd, 
                            char *msg, 
                            uint32_t msg_size,
-                           int nlmsg_type);
+                           int nlmsg_type,
+                           uint16_t flags);
 
 static void
 greet_kernel(int sock_fd, char *msg, uint32_t msg_len){
 
-    send_netlink_msg_to_kernel(sock_fd, msg, msg_len, NLMSG_GREET);
+    send_netlink_msg_to_kernel(sock_fd, msg, msg_len, NLMSG_GREET, NLM_F_ACK);
 }
 
 static void
@@ -69,41 +70,8 @@ int
 send_netlink_msg_to_kernel(int sock_fd, 
                            char *msg, 
                            uint32_t msg_size,
-                           int nlmsg_type){
-
-    /* While sending msg to kernel, we will have 
-     * to specify src address and dest address in
-     *  struct sockaddr_nl structure. Src address 
-     *  shall be this application (msg originator),
-     *  and Destination adddress shall be kernel's */
-
-    struct sockaddr_nl src_addr, dest_addr;
-
-    /* Netlink msghdr for sending Netlink msgs*/
-    struct nlmsghdr *nlh = NULL;
-
-    memset(&src_addr, 0, sizeof(src_addr));
-    
-    /* specify who is the sender of the msg (i.e. this application),
-     * kenel uses this info to reply back*/
-    src_addr.nl_family = AF_NETLINK;
-    /* ID of the application, it should be unique
-     * to a process, good pratice to use process-id*/
-    src_addr.nl_pid = getpid(); 
-    
-    /* Binding means: here, appln is telling the OS/Kernel that 
-     * this application (identified using port-id by OS) is interested 
-     * in receiving the msgs for Netlink protocol# NETLINK_TEST_PROTOCOL.
-     * You can see we have specified two arguments in bind(). Kernel will 
-     * use sock_fd (a handle) to handover the msgs coming from kernel subsystem 
-     * (the kernel module we wrote) to deliver to the application whose port-id is
-     * specified in src_address (means, this application itself).
-     * */
-
-    if(bind(sock_fd, (struct sockaddr*)&src_addr, sizeof(src_addr)) == -1){
-        printf("Error : Bind has failed\n");
-        exit(1);
-    }
+                           int nlmsg_type,
+                           uint16_t flags){
 
     /* The application needs to specify whom it is sending the msg over 
      * Netlink Protocol.
@@ -115,6 +83,8 @@ send_netlink_msg_to_kernel(int sock_fd,
      * opened the Netlink socket for protocol NETLINK_TEST_PROTOCOL 
      * as Netlink protocol will going to recieve this msg. */
     
+     struct sockaddr_nl dest_addr;
+
      memset(&dest_addr, 0, sizeof(dest_addr));
      dest_addr.nl_family = AF_NETLINK;
      dest_addr.nl_pid = 0;    /* For Linux Kernel this is always Zero*/
@@ -126,14 +96,14 @@ send_netlink_msg_to_kernel(int sock_fd,
 
      /* Always use the macro NLMSG_SPACE to calculate the size of Payload data. 
       * This macro will take care to do all necessary alignment*/
-     nlh=(struct nlmsghdr *)calloc(1,
+     struct nlmsghdr *nlh=(struct nlmsghdr *)calloc(1,
                         NLMSG_HDRLEN + NLMSG_SPACE(MAX_PAYLOAD));
 
      /* Fill the netlink message header fields*/
      /* size of the payload + padding + netlink header*/
      nlh->nlmsg_len = NLMSG_HDRLEN + NLMSG_SPACE(MAX_PAYLOAD);
      nlh->nlmsg_pid = getpid();
-     nlh->nlmsg_flags |= NLM_F_REQUEST; /*We want a reply from Kernel*/
+     nlh->nlmsg_flags = flags;
      nlh->nlmsg_type = nlmsg_type;
      nlh->nlmsg_seq = new_seq_no();
 
@@ -271,6 +241,40 @@ main(int argc, char **argv){
         printf("Error : Netlink socket creation failed"
         ": error = %d\n", errno);
         exit(EXIT_FAILURE);
+    }
+
+    /* While sending msg to kernel, we will have 
+     * to specify src address and dest address in
+     * struct sockaddr_nl structure. Src address 
+     * shall be this application (msg originator),
+     * and Destination adddress shall be kernel's */
+
+    struct sockaddr_nl src_addr;
+
+    /* Netlink msghdr for sending Netlink msgs*/
+    struct nlmsghdr *nlh = NULL;
+
+    memset(&src_addr, 0, sizeof(src_addr));
+    
+    /* specify who is the sender of the msg (i.e. this application),
+     * kenel uses this info to reply back*/
+    src_addr.nl_family = AF_NETLINK;
+    /* ID of the application, it should be unique
+     * to a process, good pratice to use process-id*/
+    src_addr.nl_pid = getpid(); 
+    
+    /* Binding means: here, appln is telling the OS/Kernel that 
+     * this application (identified using port-id by OS) is interested 
+     * in receiving the msgs for Netlink protocol# NETLINK_TEST_PROTOCOL.
+     * You can see we have specified two arguments in bind(). Kernel will 
+     * use sock_fd (a handle) to handover the msgs coming from kernel subsystem 
+     * (the kernel module we wrote) to deliver to the application whose port-id is
+     * specified in src_address (means, this application itself).
+     * */
+
+    if(bind(sock_fd, (struct sockaddr*)&src_addr, sizeof(src_addr)) == -1){
+        printf("Error : Bind has failed\n");
+        exit(1);
     }
 
     thread_arg_t thread_arg;

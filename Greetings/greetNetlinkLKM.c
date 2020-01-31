@@ -61,7 +61,7 @@ static void netlink_recv_msg_fn(struct sk_buff *skb_in){
             __FUNCTION__, __LINE__, user_space_data, user_space_data_len, nlh_recv->nlmsg_len);
 
 
-    if(nlh_recv->nlmsg_flags & NLM_F_REQUEST){
+    if(nlh_recv->nlmsg_flags & NLM_F_ACK){
 
         /*Sending reply back to user space process*/
         memset(kernel_reply, 0 , sizeof(kernel_reply));
