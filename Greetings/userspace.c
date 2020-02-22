@@ -206,10 +206,11 @@ _start_kernel_data_receiver_thread(void *arg){
         /* print the msg from kernel. kernel msg shall be stored 
          * in outermsghdr.msg_iov->iov_base
          * in same format : that is Netlink hdr followed by payload data*/
+        nlh_recv = outermsghdr.msg_iov->iov_base;
+        char *payload = NLMSG_DATA(nlh_recv);
 
         printf("Received Netlink msg from kernel, bytes recvd = %d\n", rc);
-        printf("msg recvd from kernel = %s\n", 
-            (char *)NLMSG_DATA(outermsghdr.msg_iov->iov_base));
+        printf("msg recvd from kernel = %s\n", payload);
     } while(1);
 }
 
@@ -288,7 +289,7 @@ main(int argc, char **argv){
         printf("\t1. Greet Kernel\n");
         printf("\t2. Exit\n");
         printf("choice ? ");
-        scanf("%d", &choice);
+        scanf("%d\n", &choice);
 
         switch(choice){
             case 1:
@@ -296,9 +297,9 @@ main(int argc, char **argv){
                     char user_msg[MAX_PAYLOAD];
                     memset(user_msg, 0, MAX_PAYLOAD);
 
-                    if((fgets((char *)user_msg, MAX_PAYLOAD - 1, stdin) == NULL)){
+                    if((fgets((char *)user_msg, MAX_PAYLOAD, stdin) == NULL)){
                         printf("error in reading from stdin\n");
-                        exit(EXIT_SUCCESS);
+                        exit(EXIT_FAILURE);
                     }
                     greet_kernel(sock_fd, user_msg, strlen(user_msg));
                 }
