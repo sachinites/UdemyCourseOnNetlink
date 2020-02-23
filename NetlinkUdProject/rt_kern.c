@@ -28,7 +28,9 @@
  * =====================================================================================
  */
 
-#include "rt_kern.h"
+#include "rt.h"
+#include <linux/slab.h> /*kmalloc/kfree*/
+#include <linux/module.h>
 
 void
 rt_init_rt_table(rt_table_t *rt_table){
@@ -119,3 +121,4 @@ rt_dump_rt_table(rt_table_t *rt_table){
     } ITERATE_GLTHREAD_END(&rt_table->head, curr);
 }
 
+MODULE_LICENSE("GPL");
