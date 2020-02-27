@@ -13,8 +13,8 @@
 #include <net/sock.h>       /*Network namespace and socket Based APIs*/
 #include <linux/string.h>   /*for memset/memcpy etc..., do not use <string.h>, that is for user space*/
 #include <linux/kernel.h>   /*for scnprintf*/
-#include "netLinkKernelUtils.h"
-#include "rt.h"
+#define __KERNEL_CODE__
+#include "netLinkKernelUtils.h" 
 
 /*Global variables of this LKM*/
 static struct sock *nl_sk = NULL;       /*Kernel space Netlink socket ptr*/
@@ -114,12 +114,12 @@ static struct netlink_kernel_cfg cfg = {
 };                   
                      
 /*Init function of this kernel Module*/
-static int __init NetlinkGreetings_init(void) {
+static int __init NetlinkProject_init(void) {
     
     /* All printk output would appear in /var/log/kern.log file
      * use cmd ->  tail -f /var/log/kern.log in separate terminal 
      * window to see output*/
-	printk(KERN_INFO "Hello Kernel, I am kernel Module NetlinkGreetingsLKM.ko\n");
+	printk(KERN_INFO "Hello Kernel, I am kernel Module NetlinkProjectLKM.ko\n");
    
     /* Now Create a Netlink Socket in kernel space*/
     /* Arguments : 
@@ -143,9 +143,9 @@ static int __init NetlinkGreetings_init(void) {
 }
 
 /*Exit function of this kernel Module*/
-static void __exit NetlinkGreetings_exit(void) {
+static void __exit NetlinkProject_exit(void) {
 
-	printk(KERN_INFO "Bye Bye. Exiting kernel Module NetlinkGreetingsLKM.ko \n");
+	printk(KERN_INFO "Bye Bye. Exiting kernel Module NetlinkProjectLKM.ko \n");
     /*Release any kernel resources held by this module in this fn*/
     netlink_kernel_release(nl_sk);
     nl_sk = NULL;
@@ -159,13 +159,13 @@ static void __exit NetlinkGreetings_exit(void) {
  * Whenever the Module is inserted into kernel using
  * insmod cmd, below function is triggered. You can do
  * all initializations here*/
-module_init(NetlinkGreetings_init); 
+module_init(NetlinkProject_init); 
 
 /* Registration of Kernel Module Exit Function.
  * Whenever the Module is removed from kernel using
  * rmmod cmd, below function is triggered. You can do
  * cleanup in this function.*/
-module_exit(NetlinkGreetings_exit);
+module_exit(NetlinkProject_exit);
 
 /*Module Information*/
 #define AUTHOR_NAME "ABHISHEK_SAGAR"

@@ -32,6 +32,7 @@
 
 #include <stddef.h> /*for NULL*/
 #include "glthread.h"
+#include <linux/kernel.h>
 
 void
 init_glthread(glthread_t *glthread){
@@ -191,7 +192,7 @@ dequeue_glthread_first(glthread_t *base_glthread){
     remove_glthread(temp);
     return temp;
 }
-
+//MODULE_LICENSE("GPL");
 #if 0
 void *
 gl_thread_search(glthread_t *glthread_head, 

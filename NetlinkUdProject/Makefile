@@ -1,5 +1,5 @@
 obj-m += RtmNetlinkLKM.o
-RtmNetlinkLKM-objs += rt_kern.o gluethread/glthread.o
+RtmNetlinkLKM-objs += gluethread/glthread.o rt_kern.o
 all:
 	make -C /lib/modules/`uname -r`/build M=$(PWD) modules
 clean:

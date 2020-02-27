@@ -39,6 +39,7 @@
 #include <memory.h>
 #include <stdint.h>  /*for using uint32_t*/
 #include <pthread.h>
+#undef __KERNEL__
 #include "netLinkKernelUtils.h"
 
 int
@@ -58,6 +59,60 @@ static void
 exit_userspace(int sock_fd){
     close(sock_fd);
 }
+
+int nl_add_attr(char *payload,            /*Payload Buffer start ptr*/
+                  int payload_bufer_len,    /*Total Payload Size*/
+                  int offset,               /*Offset into Payload to insert new TLV*/
+                  int TLV_TYPE,             /*2B TLV_TYPE Code*/
+                  int tlv_len,              /*2B TLV length*/
+                  char *tlv_value){         /*TLV Value*/
+
+    if(offset + TLV_OVERHEAD + RTA_ALIGN(tlv_len) > payload_bufer_len){
+        printf("Error : Insufficient payload buffer size\n");
+        return 0;
+    }
+
+    return TLV_ADD(payload + offset, TLV_TYPE, tlv_len, tlv_value);
+}
+
+
+static void
+nl_create_rt_table(int sock_fd, char *rt_name, int name_len){
+
+    /*Create a Payload : 
+     * T = 1
+     * L = name_len
+     * V = rt_name*/
+   
+    int current_tlv_size = 0;
+    char *payload = calloc(1, TLV_OVERHEAD + RTA_ALIGN(name_len));
+    /* Alternatively u can alsu use
+     * char *payload = calloc(1, RTA_SPACE(name_len));
+     * */
+    current_tlv_size = nl_add_attr(payload, 
+                                  TLV_OVERHEAD + RTA_ALIGN(name_len),
+                                  current_tlv_size, 
+                                  NETLINK_TLV_RT_CREATE, 
+                                  name_len, rt_name);
+
+    if(current_tlv_size){
+        send_netlink_msg_to_kernel(sock_fd, payload, current_tlv_size,
+            NLMSG_RT_NEW_CREATE, NLM_F_ACK | NLM_F_REQUEST | NLM_F_CREATE);
+    }
+
+    free(payload);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 uint32_t new_seq_no(){
 
@@ -287,7 +342,8 @@ main(int argc, char **argv){
         /*Main - Menu*/
         printf("Main-Menu\n");
         printf("\t1. Greet Kernel\n");
-        printf("\t2. Exit\n");
+        printf("\t2. Create New Routing Table\n");
+        printf("\t3. Exit\n");
         printf("choice ? ");
         scanf("%d\n", &choice);
 
@@ -305,6 +361,18 @@ main(int argc, char **argv){
                 }
             break;
             case 2:
+                {
+                    printf("Enter name of new Routing Table : ");
+                    char rt_name[32];
+                    memset(rt_name, 0, RT_NAME_LEN);
+                    if((fgets((char *)rt_name, RT_NAME_LEN, stdin) == NULL)){
+                        printf("error in reading from stdin\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    nl_create_rt_table(sock_fd, rt_name, RT_NAME_LEN);
+                }
+            break;
+            case 3:
                 exit_userspace(sock_fd);
             break;
             default:
